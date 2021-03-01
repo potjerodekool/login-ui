@@ -1,17 +1,21 @@
 {
   "scripts": {
     "start": "snowpack dev",
-    "build": "snowpack build",
+    "build": "snowpack build --config snowpack.config.js",
+    "watch": "snowpack build --watch --config snowpack.config.js",
     "test": "echo \"This template does not include a test runner by default.\" && exit 1",
     "type-check": "tsc"
   },
   "dependencies": {
-    "vue": "^3.0.0"
+    "axios": "^0.21.1",
+    "buefy": "^0.9.4",
+    "vue": "^3.0.0",
+    "vue-router": "^4.0.0-rc.1"
   },
   "devDependencies": {
-    "@snowpack/plugin-dotenv": "^2.0.5",
-    "@snowpack/plugin-vue": "^2.3.0",
-    "snowpack": "^3.0.1",
+    "@snowpack/plugin-dotenv": "^2.0.4",
+    "@snowpack/plugin-vue": "^2.2.4",
+    "snowpack": "^3.0.11",
     "typescript": "^4.0.2"
   }
 }

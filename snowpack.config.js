@@ -1,29 +1,22 @@
-/** @type {import("snowpack").SnowpackUserConfig } */
 module.exports = {
   mount: {
-    public: {url: '/', static: true},
-    src: {url: '/dist'},
+    public: '/',
+    src: '/_dist_/',
   },
   plugins: [
     '@snowpack/plugin-vue',
     '@snowpack/plugin-vue/plugin-tsx-jsx.js',
     '@snowpack/plugin-dotenv',
   ],
-  routes: [
-    /* Enable an SPA Fallback in development: */
-    // {"match": "routes", "src": ".*", "dest": "/index.html"},
-  ],
-  optimize: {
-    /* Example: Bundle your final build: */
-    // "bundle": true,
-  },
-  packageOptions: {
-    /* ... */
-  },
   devOptions: {
     /* ... */
+    hostname: '192.168.178.59'
   },
   buildOptions: {
+    /* ... */
+    baseUrl: '/login'
+  },
+  alias: {
     /* ... */
   },
 };
