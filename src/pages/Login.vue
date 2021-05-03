@@ -1,6 +1,6 @@
 <template>
    <div class="App jumbotron d-flex">
-    <div class="container">
+    <div class="container" v-if="state.showLogin">
       <div class="row">
         <div class="col-3">
         </div>  
@@ -19,11 +19,11 @@
         <div class="col-6">
           <input class="form-control" 
                   placeholder="gebruikersnaam" 
-                  v-model="state.username" 
+                  v-model="state.email" 
                   v-on:focus="validateLoginInput" 
                   v-on:change="validateLoginInput"
                   v-on:keyup="validateLoginInput"
-                  ref="username">
+                  ref="email">
         </div>                   
         <div class="col-3">
         </div>  
@@ -54,11 +54,18 @@
         <div class="col-3">
         </div>  
         <div class="col-7">
-            <button class="btn btn-secondary forget-button" v-on:click="$router.push('/login/resetpassword')">Wachtwoord opnieuw instellen</button>
+            <router-link to="/login/signup">Registeren</router-link>
         </div>                   
       </div>            
+      <div class="row button-row">
+        <div class="col-3">
+        </div>  
+        <div class="col-7">
+            <router-link to="/login/resetpassword">Wachtwoord opnieuw instellen</router-link>
+        </div>                   
+      </div>
     </div>              
-   </div>   
+   </div>
 </template>
 
 <script lang="ts">
@@ -68,43 +75,70 @@ import type { AuthenticationReponse } from '../api/model/AuthenticationReponse'
 import orginService from '../api/OriginService';
 
 interface State {
-  username: string,
+  email: string,
   password: string,
   loginEnabled: boolean,
   message: string,
   errorNessage: string
+  showLogin: boolean,
+  qrData: string,
+  code: string
 }
 
 export default defineComponent({
     name: 'Login',
-
     components: {},
-
+    
     mounted() {
-      this.focusInput();
+      this.clearLocalStorage();
+      this.state.qrData = "";
     },
    
     methods: {
         focusInput() {
           // @ts-ignore
-           this.$refs.username.focus(); 
+           this.$refs.email.focus(); 
+        },
+
+        clearLocalStorage() {
+          localStorage.removeItem("email");
+          localStorage.removeItem("secretImageUri");
+          localStorage.removeItem("gotoUrl");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
         },
 
         login(): void {
           this.state.message = '';
           this.state.errorNessage = '';
+          this.clearLocalStorage();
 
           const origin = orginService.getOrigin()
           const url = `${origin}/auth/authenticate/`;
-          console.log(url);
-          
+
           axios.post<AuthenticationReponse>(url, {
-              email: this.state.username,
+              email: this.state.email,
               password: this.state.password
           }).then(response => {
-              localStorage.setItem("accessToken", response.data.accessToken);
-              localStorage.setItem("refreshToken", response.data.refreshToken);
-              window.location.replace('/dashboard');
+              if (response.data.secretImageUri) {
+                localStorage.setItem("email", this.state.email);
+                localStorage.setItem("secretImageUri", response.data.secretImageUri);
+                localStorage.setItem("loginToken", response.data.loginToken);
+                this.$router.push('/login/mfa')
+              } else if (response.data.mfa) {
+                localStorage.setItem("email", this.state.email);
+                localStorage.setItem("gotoUrl", '/dashboard/');
+                localStorage.setItem("loginToken", response.data.loginToken);
+                this.$router.push('/login/mfa')
+              } else {
+                localStorage.setItem("accessToken", response.data.accessToken);
+
+                const refreshToken = response.data.refreshToken;
+                if (refreshToken) {
+                  localStorage.setItem("refreshToken", refreshToken);
+                }                
+                window.location.replace('/dashboard/');
+              }
           }).catch(error => {
               const status = error.response.status
 
@@ -116,24 +150,32 @@ export default defineComponent({
           })
         },
 
+        canSendCode() {
+          return this.state.code.length == 6;
+        },
+
         validateLoginInput(evt: any): void {
-            this.state.loginEnabled = this.state.username.length > 3 && this.state.password.length > 3;
+            this.state.loginEnabled = this.state.email.length > 3 && this.state.password.length > 3;
         }
   },
 
   setup() {
     const state = reactive({
-      username: '',
+      email: '',
       password: '',
       errorNessage: '',
       loginEnabled: false,
       message: '',
-      messageClasses: ''
+      messageClasses: '',
+      showLogin: true,
+      qrData: '',
+      code: ''
     });
 
     return {
       state
     };
+
   },  
 });
 </script>
@@ -144,14 +186,5 @@ export default defineComponent({
 }
 .button-row {
   padding-top:10px;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: scale(1);
-  }
-  to {
-    transform: scale(1.06);
-  }
 }
 </style>

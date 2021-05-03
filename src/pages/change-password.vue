@@ -120,7 +120,7 @@ export default defineComponent({
 
         validateInput(): void {
            this.state.disableButton = 
-            this.state.email == '' && this.state.validationToken == '' || !(this.state.password.length > 3 && this.state.password == this.state.password2);
+           this.state.email == '' && this.state.validationToken == '' || !(this.state.password.length > 3 && this.state.password == this.state.password2);
         }
   },
 
